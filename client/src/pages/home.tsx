@@ -44,22 +44,35 @@ export default function Home() {
   };
 
   const handleStopConversation = () => {
-    if (connectionRef.current) {
-      // Close all media tracks
-      connectionRef.current.stream.getTracks().forEach(track => {
-        track.stop();
-      });
+    try {
+      if (connectionRef.current) {
+        // Close all media tracks
+        connectionRef.current.stream.getTracks().forEach(track => {
+          track.stop();
+        });
 
-      // Close the peer connection
-      connectionRef.current.pc.close();
-      connectionRef.current = null;
+        // Close data channel first
+        if (connectionRef.current.dc.readyState === 'open') {
+          connectionRef.current.dc.close();
+        }
+
+        // Close the peer connection
+        if (connectionRef.current.pc.connectionState !== 'closed') {
+          connectionRef.current.pc.close();
+        }
+
+        connectionRef.current = null;
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    } finally {
       setIsConnected(false);
+      setIsListening(false);
+      toast({
+        title: "Disconnected",
+        description: "Conversation ended",
+      });
     }
-    setIsListening(false);
-    toast({
-      title: "Disconnected",
-      description: "Conversation ended",
-    });
   };
 
   return (
