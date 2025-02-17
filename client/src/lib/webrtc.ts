@@ -36,7 +36,20 @@ export async function initWebRTC(ephemeralKey: string): Promise<WebRTCState> {
     const event = JSON.parse(e.data);
     console.log('Received event:', event);
   });
+  
+  // Wait until the data channel is open
+  dc.addEventListener("open", () => {
+    console.log("Data channel is open, sending message...");
+    dc.send(JSON.stringify({
+      type: "response.create",
+      response: {
+        modalities: ["text", "audio"],
+        instructions: "You are a helpful language learning assistant. Engage in natural conversation while helping the user practice their language skills. Correct any errors gently and provide encouragement.",
+      },
+    }));
+  });
 
+  
   // Initialize session
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
@@ -65,13 +78,13 @@ export async function initWebRTC(ephemeralKey: string): Promise<WebRTCState> {
   await pc.setRemoteDescription(answer);
 
   // Start conversation
-  dc.send(JSON.stringify({
-    type: "response.create",
-    response: {
-      modalities: ["text", "speech"],
-      instructions: "You are a helpful language learning assistant. Engage in natural conversation while helping the user practice their language skills. Correct any errors gently and provide encouragement.",
-    },
-  }));
+  // dc.send(JSON.stringify({
+  //   type: "response.create",
+  //   response: {
+  //     modalities: ["text", "speech"],
+  //     instructions: "You are a helpful language learning assistant. Engage in natural conversation while helping the user practice their language skills. Correct any errors gently and provide encouragement.",
+  //   },
+  // }));
 
   return { pc, dc, stream };
 }

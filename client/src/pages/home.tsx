@@ -12,6 +12,10 @@ export default function Home() {
   const { toast } = useToast();
 
   const handleStartConversation = async () => {
+    if (connectionRef.current) {
+      console.warn('Connection already exists, closing previous connection');
+      handleStopConversation();
+    }
     try {
       const response = await fetch('/api/session');
       if (!response.ok) {
@@ -24,7 +28,12 @@ export default function Home() {
       }
 
       if (!connectionRef.current) {
-        connectionRef.current = await initWebRTC(data.client_secret.value);
+        try {
+          console.log(data.client_secret.value)
+          connectionRef.current = await initWebRTC(data.client_secret.value);
+        } catch(e) {
+          throw e
+        }
         setIsConnected(true);
         toast({
           title: "Connected!",
