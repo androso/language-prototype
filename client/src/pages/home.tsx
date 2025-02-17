@@ -13,10 +13,18 @@ export default function Home() {
 
   const handleStartConversation = async () => {
     try {
-      const token = await fetch('/api/session').then(r => r.json());
-      
+      const response = await fetch('/api/session');
+      if (!response.ok) {
+        throw new Error('Failed to get session token');
+      }
+
+      const data = await response.json();
+      if (!data?.client_secret?.value) {
+        throw new Error('Invalid session token received');
+      }
+
       if (!connectionRef.current) {
-        connectionRef.current = await initWebRTC(token.client_secret.value);
+        connectionRef.current = await initWebRTC(data.client_secret.value);
         setIsConnected(true);
         toast({
           title: "Connected!",
@@ -25,12 +33,13 @@ export default function Home() {
       }
 
       setIsListening(true);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Connection Error",
-        description: error.message,
+        description: error?.message || "Failed to start conversation",
         variant: "destructive",
       });
+      console.error('Connection error:', error);
     }
   };
 
@@ -41,6 +50,10 @@ export default function Home() {
       setIsConnected(false);
     }
     setIsListening(false);
+    toast({
+      title: "Disconnected",
+      description: "Conversation ended",
+    });
   };
 
   return (
@@ -48,18 +61,18 @@ export default function Home() {
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="pt-6 flex flex-col items-center gap-6">
           <h1 className="text-2xl font-bold text-foreground">Language Practice</h1>
-          
+
           <StatusIndicator 
             isConnected={isConnected} 
             isListening={isListening} 
           />
-          
+
           <AudioControls 
             isListening={isListening}
             onStart={handleStartConversation}
             onStop={handleStopConversation}
           />
-          
+
           <p className="text-sm text-muted-foreground text-center">
             {isConnected 
               ? "Speak naturally - the AI will respond in real-time" 
