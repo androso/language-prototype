@@ -45,6 +45,12 @@ export default function Home() {
 
   const handleStopConversation = () => {
     if (connectionRef.current) {
+      // Close all media tracks
+      connectionRef.current.stream.getTracks().forEach(track => {
+        track.stop();
+      });
+
+      // Close the peer connection
       connectionRef.current.pc.close();
       connectionRef.current = null;
       setIsConnected(false);
