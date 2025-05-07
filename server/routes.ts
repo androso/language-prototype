@@ -17,7 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify({
           model: "gpt-4o-mini-realtime-preview-2024-12-17",
-          voice: "sol",
+          // Removing voice parameter since 'sol' is not available for current organization
         }),
       });
 
