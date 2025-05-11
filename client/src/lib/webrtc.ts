@@ -2,12 +2,12 @@ export interface WebRTCState {
   pc: RTCPeerConnection;
   dc: RTCDataChannel;
   stream: MediaStream;
-  onTranscriptUpdate?: (text: string, clear?: boolean) => void;
+  onTranscriptUpdate?: (text: string) => void;
 }
 
 export async function initWebRTC(
   ephemeralKey: string, 
-  onTranscriptUpdate?: (text: string, clear?: boolean) => void
+  onTranscriptUpdate?: (text: string) => void
 ): Promise<WebRTCState> {
   // Create peer connection
   const pc = new RTCPeerConnection();
@@ -44,14 +44,11 @@ export async function initWebRTC(
     if (event.type === "response.text.delta" && onTranscriptUpdate && event.delta) {
       onTranscriptUpdate(event.delta);
     } else if (event.type === "response.text.done" && onTranscriptUpdate && event.text) {
-      // Not needed as we're already handling deltas
+      onTranscriptUpdate(event.text);
     } else if (event.type === "response.audio_transcript.delta" && onTranscriptUpdate && event.delta) {
       onTranscriptUpdate(event.delta);
     } else if (event.type === "response.audio_transcript.done" && onTranscriptUpdate && event.transcript) {
-      // Not needed as we're already handling deltas
-    } else if (event.type === "response.created" && onTranscriptUpdate) {
-      // Clear transcript when AI starts speaking again
-      onTranscriptUpdate("", true);
+      onTranscriptUpdate(event.transcript);
     }
   });
   

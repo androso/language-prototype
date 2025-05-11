@@ -10,9 +10,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const connectionRef = useRef<WebRTCState | null>(null);
-  const wordsRef = useRef<string[]>([]);
   const { toast } = useToast();
 
   const handleStartConversation = async () => {
@@ -37,12 +35,8 @@ export default function Home() {
           setTranscript('');
           
           // Create a transcript update handler
-          const handleTranscriptUpdate = (text: string, clear: boolean = false) => {
-            if (clear) {
-              setTranscript("");
-            } else {
-              setTranscript(current => current + text);
-            }
+          const handleTranscriptUpdate = (text: string) => {
+            setTranscript(current => current + text);
           };
           
           connectionRef.current = await initWebRTC(
