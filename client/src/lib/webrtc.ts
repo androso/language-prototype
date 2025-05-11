@@ -44,11 +44,16 @@ export async function initWebRTC(
     if (event.type === "response.text.delta" && onTranscriptUpdate && event.delta) {
       onTranscriptUpdate(event.delta);
     } else if (event.type === "response.text.done" && onTranscriptUpdate && event.text) {
-      onTranscriptUpdate(event.text);
+      // Skip sending full text at the end to avoid duplication
+      // onTranscriptUpdate(event.text);
     } else if (event.type === "response.audio_transcript.delta" && onTranscriptUpdate && event.delta) {
       onTranscriptUpdate(event.delta);
     } else if (event.type === "response.audio_transcript.done" && onTranscriptUpdate && event.transcript) {
-      onTranscriptUpdate(event.transcript);
+      // Skip sending full transcript at the end to avoid duplication
+      // onTranscriptUpdate(event.transcript);
+    } else if (event.type === "response.created" && onTranscriptUpdate) {
+      // Clear transcript when a new response starts
+      onTranscriptUpdate("");
     }
   });
   

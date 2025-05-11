@@ -36,7 +36,13 @@ export default function Home() {
           
           // Create a transcript update handler
           const handleTranscriptUpdate = (text: string) => {
-            setTranscript(current => current + text);
+            // Check if this is a new response from the assistant
+            if (text.startsWith("Hello") || text.startsWith("Hey")) {
+              // Clear transcript for new responses
+              setTranscript(text);
+            } else {
+              setTranscript(current => current + text);
+            }
           };
           
           connectionRef.current = await initWebRTC(
