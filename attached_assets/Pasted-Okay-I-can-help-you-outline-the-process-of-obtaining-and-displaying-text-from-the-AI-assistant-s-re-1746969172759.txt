@@ -1,0 +1,63 @@
+Okay, I can help you outline the process of obtaining and displaying text from the AI assistant's responses, which corresponds to the audio returned by the AI. In this application, the client doesn't transcribe the AI's audio output; rather, it receives the textual content of the AI's speech as structured data from the server.
+
+Here's how it works, structured for a prompt:
+
+**Objective:** To display a real-time transcript of a conversation with an AI assistant, including the text of what the AI assistant says.
+
+**Core Mechanism for Handling AI Assistant's Text:**
+
+1.  **Server Communication Layer:**
+    *   A WebRTC data channel (`RTCDataChannel`) is established for bi-directional JSON-based messaging with the server.
+    *   The client listens for messages on this data channel.
+        *   *Relevant Code:* `dc.addEventListener("message", (e: MessageEvent) => { handleServerEventRef.current(JSON.parse(e.data)); });` in `App.tsx`.
+
+2.  **Server Event Handling:**
+    *   A dedicated handler function (encapsulated in the `useHandleServerEvent` hook) processes incoming JSON messages from the server.
+    *   This handler is responsible for interpreting different types of server events.
+        *   *Relevant Code:* The `useHandleServerEvent` hook and its invocation.
+
+3.  **Identifying Assistant Messages:**
+    *   The server sends events, typically structured as JSON, that represent new items in the conversation. For an assistant's response, this event would include:
+        *   A type identifier (e.g., `"conversation.item.create"`).
+        *   The role of the speaker (e.g., `item.role: "assistant"`).
+        *   The content of the message, including the text (e.g., `item.content: [{ type: "text", text: "This is the assistant's response." }]`).
+
+4.  **Transcript Management:**
+    *   A context provider (e.g., `TranscriptContext` via `useTranscript`) manages the conversation transcript.
+    *   It maintains an array of transcript items (`transcriptItems`).
+    *   It exposes a function (e.g., `addTranscriptMessage(id, role, text, isFinal)`) to add new messages to this array.
+
+5.  **Updating the Transcript with Assistant's Text:**
+    *   When the server event handler receives a message identified as the assistant's response, it extracts the textual content.
+    *   It then calls the `addTranscriptMessage` function with the assistant's role and the extracted text to update the transcript state.
+
+6.  **Displaying the Transcript:**
+    *   A UI component (e.g., `Transcript`) subscribes to the `transcriptItems` from the `TranscriptContext`.
+    *   It renders the conversation history, including the user's messages and the assistant's textual responses.
+
+**Configuration for User Input (Leading to Assistant Response):**
+
+*   To enable the conversation, the client configures how the server should handle user audio input, including transcription. This is done by sending a `session.update` event to the server.
+*   This configuration specifies the transcription model for user audio (e.g., "whisper-1").
+    *   *Relevant Code Snippet from `updateSession` in `App.tsx`*:
+        ````tsx
+        // filepath: /home/androso/dev/openai-realtime-agents/src/app/App.tsx
+        // ...existing code...
+            const sessionUpdateEvent = {
+              type: "session.update",
+              session: {
+                modalities: ["text", "audio"],
+                instructions,
+                voice: "sage",
+                input_audio_transcription: { model: "whisper-1" }, // Configures server-side transcription for USER audio
+                turn_detection: turnDetection,
+                tools,
+              },
+            };
+        
+            sendClientEvent(sessionUpdateEvent);
+        // ...existing code...
+        ````
+    *   The server transcribes the user's audio based on this setting, processes it, and then the AI assistant generates its response (audio and the corresponding text event described above).
+
+In summary, the "transcript from the audio returned by OpenAI" is obtained by receiving a server event that explicitly contains the text of the assistant's speech, rather than by performing client-side speech-to-text on the assistant's audio stream. The audio stream itself is handled separately for playback.
