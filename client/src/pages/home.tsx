@@ -2,12 +2,14 @@ import { useState, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import AudioControls from "@/components/conversation/audio-controls";
 import StatusIndicator from "@/components/conversation/status-indicator";
+import Transcript from "@/components/conversation/transcript";
 import { useToast } from "@/hooks/use-toast";
 import { initWebRTC, WebRTCState } from "@/lib/webrtc";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
   const connectionRef = useRef<WebRTCState | null>(null);
   const { toast } = useToast();
 

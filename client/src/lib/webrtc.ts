@@ -2,9 +2,13 @@ export interface WebRTCState {
   pc: RTCPeerConnection;
   dc: RTCDataChannel;
   stream: MediaStream;
+  onTranscriptUpdate?: (text: string) => void;
 }
 
-export async function initWebRTC(ephemeralKey: string): Promise<WebRTCState> {
+export async function initWebRTC(
+  ephemeralKey: string, 
+  onTranscriptUpdate?: (text: string) => void
+): Promise<WebRTCState> {
   // Create peer connection
   const pc = new RTCPeerConnection();
 
@@ -35,6 +39,17 @@ export async function initWebRTC(ephemeralKey: string): Promise<WebRTCState> {
   dc.addEventListener("message", (e) => {
     const event = JSON.parse(e.data);
     console.log('Received event:', event);
+    
+    // Handle transcript events
+    if (event.type === "response.text.delta" && onTranscriptUpdate && event.delta) {
+      onTranscriptUpdate(event.delta);
+    } else if (event.type === "response.text.done" && onTranscriptUpdate && event.text) {
+      onTranscriptUpdate(event.text);
+    } else if (event.type === "response.audio_transcript.delta" && onTranscriptUpdate && event.delta) {
+      onTranscriptUpdate(event.delta);
+    } else if (event.type === "response.audio_transcript.done" && onTranscriptUpdate && event.transcript) {
+      onTranscriptUpdate(event.transcript);
+    }
   });
   
   // Wait until the data channel is open
@@ -86,5 +101,5 @@ export async function initWebRTC(ephemeralKey: string): Promise<WebRTCState> {
   //   },
   // }));
 
-  return { pc, dc, stream };
+  return { pc, dc, stream, onTranscriptUpdate };
 }
