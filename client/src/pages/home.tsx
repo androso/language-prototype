@@ -10,7 +10,9 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const connectionRef = useRef<WebRTCState | null>(null);
+  const wordsRef = useRef<string[]>([]);
   const { toast } = useToast();
 
   const handleStartConversation = async () => {

@@ -7,7 +7,7 @@ export interface WebRTCState {
 
 export async function initWebRTC(
   ephemeralKey: string, 
-  onTranscriptUpdate?: (text: string) => void
+  onTranscriptUpdate?: (text: string, clear?: boolean) => void
 ): Promise<WebRTCState> {
   // Create peer connection
   const pc = new RTCPeerConnection();
