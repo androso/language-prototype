@@ -31,8 +31,18 @@ export default function Home() {
 
       if (!connectionRef.current) {
         try {
-          console.log(data.client_secret.value)
-          connectionRef.current = await initWebRTC(data.client_secret.value);
+          // Clear previous transcript when starting a new conversation
+          setTranscript('');
+          
+          // Create a transcript update handler
+          const handleTranscriptUpdate = (text: string) => {
+            setTranscript(current => current + text);
+          };
+          
+          connectionRef.current = await initWebRTC(
+            data.client_secret.value,
+            handleTranscriptUpdate
+          );
         } catch(e) {
           throw e
         }
@@ -79,6 +89,7 @@ export default function Home() {
     } finally {
       setIsConnected(false);
       setIsListening(false);
+      // Don't clear transcript here to let user see the conversation history
       toast({
         title: "Disconnected",
         description: "Conversation ended",
@@ -91,6 +102,13 @@ export default function Home() {
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="pt-6 flex flex-col items-center gap-6">
           <h1 className="text-2xl font-bold text-foreground">Language Practice</h1>
+          
+          {transcript && (
+            <Transcript 
+              text={transcript} 
+              className="w-full mb-2"
+            />
+          )}
 
           <StatusIndicator 
             isConnected={isConnected} 
