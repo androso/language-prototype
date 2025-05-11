@@ -15,18 +15,6 @@ export async function initWebRTC(
   // Set up audio playback
   const audioEl = document.createElement("audio");
   audioEl.autoplay = true;
-  
-  // Configure audio element and listen for audio events
-  audioEl.addEventListener('play', () => {
-    console.log('Audio started playing');
-    // We could add additional audio event handling here
-  });
-  
-  audioEl.addEventListener('ended', () => {
-    console.log('Audio finished playing');
-    // We could add additional audio event handling here
-  });
-  
   pc.ontrack = e => audioEl.srcObject = e.streams[0];
 
   // Add microphone input
