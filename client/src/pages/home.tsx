@@ -35,8 +35,12 @@ export default function Home() {
           setTranscript('');
           
           // Create a transcript update handler
-          const handleTranscriptUpdate = (text: string) => {
-            setTranscript(current => current + text);
+          const handleTranscriptUpdate = (text: string, clear: boolean = false) => {
+            if (clear) {
+              setTranscript("");
+            } else {
+              setTranscript(current => current + text);
+            }
           };
           
           connectionRef.current = await initWebRTC(
