@@ -13,6 +13,7 @@ export default function Home() {
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const connectionRef = useRef<WebRTCState | null>(null);
   const wordsRef = useRef<string[]>([]);
+  const highlightIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
   const handleStartConversation = async () => {
@@ -40,9 +41,54 @@ export default function Home() {
           const handleTranscriptUpdate = (text: string, clear: boolean = false) => {
             if (clear) {
               setTranscript("");
+              setCurrentWordIndex(-1);
+              wordsRef.current = [];
             } else {
-              setTranscript(current => current + text);
+              setTranscript(current => {
+                const newTranscript = current + text;
+                // Update words ref with the new transcript words
+                wordsRef.current = newTranscript.split(/\s+/).filter(word => word.length > 0);
+                return newTranscript;
+              });
+              
+              // When we receive new transcript content, start highlighting words
+              if (text.trim().length > 0) {
+                startWordHighlighting();
+              }
             }
+          };
+          
+          // Start highlighting words in sequence
+          const startWordHighlighting = () => {
+            // Clear any existing interval
+            if (highlightIntervalRef.current) {
+              clearInterval(highlightIntervalRef.current);
+              highlightIntervalRef.current = null;
+            }
+            
+            // Reset word index first
+            setCurrentWordIndex(-1);
+            
+            // Use a timeout to start highlighting after a small delay
+            setTimeout(() => {
+              // Average words per minute for normal speech is around 150
+              // So we advance roughly every 400ms per word
+              const msPerWord = 400;
+              let wordIndex = 0;
+              
+              highlightIntervalRef.current = setInterval(() => {
+                if (wordIndex < wordsRef.current.length) {
+                  setCurrentWordIndex(wordIndex);
+                  wordIndex++;
+                } else {
+                  // End of transcript
+                  if (highlightIntervalRef.current) {
+                    clearInterval(highlightIntervalRef.current);
+                    highlightIntervalRef.current = null;
+                  }
+                }
+              }, msPerWord);
+            }, 500); // Small delay to allow audio to start
           };
           
           connectionRef.current = await initWebRTC(
@@ -72,6 +118,12 @@ export default function Home() {
 
   const handleStopConversation = () => {
     try {
+      // Clear word highlighting interval
+      if (highlightIntervalRef.current) {
+        clearInterval(highlightIntervalRef.current);
+        highlightIntervalRef.current = null;
+      }
+      
       if (connectionRef.current) {
         // Close all media tracks
         connectionRef.current.stream.getTracks().forEach(track => {
@@ -96,6 +148,7 @@ export default function Home() {
       setIsConnected(false);
       setIsListening(false);
       // Don't clear transcript here to let user see the conversation history
+      setCurrentWordIndex(-1); // Reset word highlighting
       toast({
         title: "Disconnected",
         description: "Conversation ended",
@@ -112,6 +165,7 @@ export default function Home() {
           {transcript && (
             <Transcript 
               text={transcript} 
+              currentWordIndex={currentWordIndex}
               className="w-full mb-2"
             />
           )}
